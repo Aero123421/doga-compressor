@@ -55,7 +55,9 @@ jobs:
           fi
           
           # Generate release notes
-          echo "# Release ${{ github.event.inputs.tag }}" > release_notes.md
+          echo "# Release ${{ github.event.inputs.tag }}" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "> ⚠️ **Notice**: This project is entirely AI-generated and coded." >> release_notes.md
           echo "" >> release_notes.md
           echo "## English / English" >> release_notes.md
           echo "" >> release_notes.md
@@ -84,6 +86,8 @@ jobs:
           fi
           
           echo "## Japanese / 日本語" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "> ⚠️ **注意**: このプロジェクトは完全にAIによって生成・コーディングされたものです。" >> release_notes.md
           echo "" >> release_notes.md
           echo "バージョン ${{ github.event.inputs.tag }} をリリースしました。" >> release_notes.md
           echo "" >> release_notes.md

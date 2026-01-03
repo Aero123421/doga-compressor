@@ -1,5 +1,7 @@
 # 動画コンパク太 (UIedVideoCompacter)
 
+> ⚠️ **注意**: このプロジェクトは完全にAIによって生成・コーディングされたものです。
+
 <div align="center">
 
 ![Android](https://img.shields.io/badge/Android-31%2B-green?logo=android)
@@ -178,6 +180,8 @@ Made with ❤️ by [Your Name]
 ## English Version
 
 # UIedVideoCompacter (動画コンパク太)
+
+> ⚠️ **Notice**: This project is entirely AI-generated and coded.
 
 <div align="center">
 

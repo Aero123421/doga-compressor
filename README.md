@@ -47,6 +47,16 @@
 | 小サイズ | 350MB/時 | 720p | SNS投稿向き |
 | 極小 | 200MB/時 | 480p | 確認用 |
 
+## ⬇️ ダウンロード
+
+### APKファイル
+
+[![Latest Release](https://img.shields.io/badge/Download-Latest%20Release-green?logo=github)](https://github.com/Aero123421/doga-compressor/releases/latest)
+
+最新のAPKは [GitHub Releases](https://github.com/Aero123421/doga-compressor/releases) からダウンロードできます。
+
+> ⚠️ **注意**: APKは署名されていません。インストールには不明なアプリのインストールを許可する必要があり、更新の度にアンインストールが必要になる場合があります。
+
 ## 🚀 クイックスタート
 
 ### 環境要件
@@ -202,6 +212,16 @@ Easily compress videos and save your phone storage
 - 🎨 **Modern UI** - Material Design 3 + Jetpack Compose
 - 🔔 **Background Processing** - Asynchronous compression with WorkManager
 - 📱 **Android 31+ Support** - Leveraging latest Android features
+
+## ⬇️ Download
+
+### APK Files
+
+[![Latest Release](https://img.shields.io/badge/Download-Latest%20Release-green?logo=github)](https://github.com/Aero123421/doga-compressor/releases/latest)
+
+Download the latest APK from [GitHub Releases](https://github.com/Aero123421/doga-compressor/releases).
+
+> ⚠️ **Notice**: APKs are unsigned. You may need to allow installation from unknown sources and uninstall previous versions to update.
 
 ## 🚀 Quick Start
 

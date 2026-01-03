@@ -141,7 +141,8 @@ class PreviewViewModel(application: Application) : AndroidViewModel(application)
                     uri = uri.toString(),
                     size = size,
                     duration = duration,
-                    presetName = selectedPreset.name
+                    presetName = "CUSTOM",
+                    compressionPercentage = compressionPercentage
                 )
             }
             queueStore.addAllToQueue(items)

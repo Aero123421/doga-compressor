@@ -4,9 +4,9 @@
 
 <div align="center">
 
-![Android](https://img.shields.io/badge/Android-31%2B-green?logo=android)
-![Kotlin](https://img.shields.io/badge/Kotlin-1.9-blue?logo=kotlin)
-![Compose](https://img.shields.io/badge/Jetpack%20Compose-1.6-purple?logo=jetpackcompose)
+[![Android](https://img.shields.io/badge/Android-31%2B-green?logo=android)](https://developer.android.com)
+[![Kotlin](https://img.shields.io/badge/Kotlin-1.9-blue?logo=kotlin)](https://kotlinlang.org)
+[![Compose](https://img.shields.io/badge/Jetpack%20Compose-1.6-purple?logo=jetpackcompose)](https://developer.android.com/jetpack/compose)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 動画を簡単に圧縮して、スマホの容量を節約
@@ -36,6 +36,14 @@
 | 状態管理 | ViewModel + DataStore |
 | 依存性注入 | なし (シンプルな構成) |
 | 非同期処理 | Kotlin Coroutines + Flow |
+
+## 🔑 必要な権限
+
+アプリを正常に動作させるために、以下の権限を使用します：
+
+- **通知 (POST_NOTIFICATIONS)**: 圧縮の進行状況や完了をバックグラウンドで通知するために使用します。
+- **メディアアクセス (READ_MEDIA_VIDEO / READ_EXTERNAL_STORAGE)**: デバイス内の動画ファイルを選択・圧縮するために必要です。
+- **フォアグラウンドサービス (FOREGROUND_SERVICE_MEDIA_PROCESSING)**: アプリを閉じても圧縮処理を継続するために使用します。
 
 ## 🎯 圧縮プリセット
 
@@ -68,8 +76,8 @@
 ### ビルド手順
 
 ```bash
-# リポジトリのクローン
-git clone <repository-url>
+# リポジトリのクローン (ディレクトリ名を指定)
+git clone https://github.com/Aero123421/doga-compressor.git UIedvideocompacter
 cd UIedvideocompacter
 
 # Gradle同期
@@ -90,10 +98,10 @@ cd UIedvideocompacter
 ### 圧縮キュー
 圧縮待ちの動画一覧、プリセット変更
 
-### 実行中タスク
+### 実行中タスク (Progress)
 現在進行中の圧縮処理の監視
 
-### 圧縮結果
+### 圧縮結果 (Result)
 圧縮済み動画の閲覧、共有、元動画との比較
 
 ### 設定
@@ -128,8 +136,8 @@ app/src/main/java/com/example/uiedvideocompacter/
 │   │   ├── library/               # ライブラリ画面
 │   │   ├── preview/               # プレビュー画面
 │   │   ├── queue/                  # キュー画面
-│   │   ├── active/                 # 実行中タスク画面
-│   │   ├── results/               # 結果画面
+│   │   ├── progress/               # 実行中タスク画面
+│   │   ├── result/                 # 結果画面
 │   │   ├── settings/               # 設定画面
 │   │   └── onboarding/            # オンボーディング画面
 │   └── theme/                      # テーマ設定
@@ -181,7 +189,7 @@ MIT License - 詳細は [LICENSE](LICENSE) ファイルを参照してくださ�
 
 <div align="center">
 
-Made with ❤️ by [Your Name]
+Made with ❤️ by Aero123421
 
 </div>
 
@@ -195,9 +203,9 @@ Made with ❤️ by [Your Name]
 
 <div align="center">
 
-![Android](https://img.shields.io/badge/Android-31%2B-green?logo=android)
-![Kotlin](https://img.shields.io/badge/Kotlin-1.9-blue?logo=kotlin)
-![Compose](https://img.shields.io/badge/Jetpack%20Compose-1.6-purple?logo=jetpackcompose)
+[![Android](https://img.shields.io/badge/Android-31%2B-green?logo=android)](https://developer.android.com)
+[![Kotlin](https://img.shields.io/badge/Kotlin-1.9-blue?logo=kotlin)](https://kotlinlang.org)
+[![Compose](https://img.shields.io/badge/Jetpack%20Compose-1.6-purple?logo=jetpackcompose)](https://developer.android.com/jetpack/compose)
 
 Easily compress videos and save your phone storage
 
@@ -223,6 +231,14 @@ Download the latest APK from [GitHub Releases](https://github.com/Aero123421/dog
 
 > ⚠️ **Notice**: APKs are unsigned. You may need to allow installation from unknown sources and uninstall previous versions to update.
 
+## 🔑 Permissions
+
+This app requires the following permissions to function correctly:
+
+- **Notifications (POST_NOTIFICATIONS)**: Used to show compression progress and completion status in the background.
+- **Media Access (READ_MEDIA_VIDEO / READ_EXTERNAL_STORAGE)**: Required to select and compress video files from your device.
+- **Foreground Service (FOREGROUND_SERVICE_MEDIA_PROCESSING)**: Allows the app to continue compressing videos even when the app is closed.
+
 ## 🚀 Quick Start
 
 ### Requirements
@@ -234,8 +250,8 @@ Download the latest APK from [GitHub Releases](https://github.com/Aero123421/dog
 ### Build
 
 ```bash
-# Clone the repository
-git clone <repository-url>
+# Clone the repository (specifying directory name)
+git clone https://github.com/Aero123421/doga-compressor.git UIedvideocompacter
 cd UIedvideocompacter
 
 # Build with Gradle

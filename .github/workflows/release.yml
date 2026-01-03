@@ -1,9 +1,17 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g., v1.0.0)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   release:
@@ -12,6 +20,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -31,24 +41,88 @@ jobs:
       - name: Build Debug APK
         run: ./gradlew assembleDebug --stacktrace
       
-      - name: Sign APK (optional)
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      - name: Generate Release Notes (Bilingual)
+        id: release_notes
         run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > keystore.jks
-          # Sign command here if needed
+          # Get previous tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          
+          # Get commits since previous tag or all commits
+          if [ -n "$PREVIOUS_TAG" ]; then
+            COMMITS=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"%h|%s")
+          else
+            COMMITS=$(git log --pretty=format:"%h|%s")
+          fi
+          
+          # Generate release notes
+          echo "# Release ${{ github.event.inputs.tag }}" > release_notes.md
+          echo "" >> release_notes.md
+          echo "## English / English" >> release_notes.md
+          echo "" >> release_notes.md
+          
+          # Parse commits and categorize
+          FEATURES=$(echo "$COMMITS" | grep -i "^.*|feat:" || echo "")
+          FIXES=$(echo "$COMMITS" | grep -i "^.*|fix:" || echo "")
+          OTHERS=$(echo "$COMMITS" | grep -v -i "^.*|feat:" | grep -v -i "^.*|fix:" || echo "")
+          
+          if [ -n "$FEATURES" ]; then
+            echo "### ✨ Features / 新機能" >> release_notes.md
+            echo "$FEATURES" | sed 's/[^|]*|/ - /' >> release_notes.md
+            echo "" >> release_notes.md
+          fi
+          
+          if [ -n "$FIXES" ]; then
+            echo "### 🐛 Bug Fixes / バグ修正" >> release_notes.md
+            echo "$FIXES" | sed 's/[^|]*|/ - /' >> release_notes.md
+            echo "" >> release_notes.md
+          fi
+          
+          if [ -n "$OTHERS" ]; then
+            echo "### 📝 Other Changes / その他の変更" >> release_notes.md
+            echo "$OTHERS" | sed 's/[^|]*|/ - /' >> release_notes.md
+            echo "" >> release_notes.md
+          fi
+          
+          echo "## Japanese / 日本語" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "バージョン ${{ github.event.inputs.tag }} をリリースしました。" >> release_notes.md
+          echo "" >> release_notes.md
+          
+          # Japanese translation
+          if [ -n "$FEATURES" ]; then
+            echo "### ✨ 新機能" >> release_notes.md
+            echo "$FEATURES" | sed 's/[^|]*|/ - /' >> release_notes.md
+            echo "" >> release_notes.md
+          fi
+          
+          if [ -n "$FIXES" ]; then
+            echo "### 🐛 バグ修正" >> release_notes.md
+            echo "$FIXES" | sed 's/[^|]*|/ - /' >> release_notes.md
+            echo "" >> release_notes.md
+          fi
+          
+          if [ -n "$OTHERS" ]; then
+            echo "### 📝 その他の変更" >> release_notes.md
+            echo "$OTHERS" | sed 's/[^|]*|/ - /' >> release_notes.md
+            echo "" >> release_notes.md
+          fi
+          
+          cat release_notes.md
+      
+      - name: Tag Release
+        run: |
+          git tag -a ${{ github.event.inputs.tag }} -m "Release ${{ github.event.inputs.tag }}"
+          git push origin ${{ github.event.inputs.tag }}
       
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: ${{ github.event.inputs.tag }}
+          body_path: release_notes.md
           files: |
             app/build/outputs/apk/release/app-release-unsigned.apk
             app/build/outputs/apk/debug/app-debug.apk
-          generate_release_notes: true
           draft: false
-          prerelease: false
+          prerelease: ${{ github.event.inputs.prerelease }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

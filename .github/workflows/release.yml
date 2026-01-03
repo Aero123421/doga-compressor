@@ -59,6 +59,8 @@ jobs:
           echo "" >> release_notes.md
           echo "> ⚠️ **Notice**: This project is entirely AI-generated and coded." >> release_notes.md
           echo "" >> release_notes.md
+          echo "> ⚠️ **Unsigned APK Warning**: These APKs are unsigned. You may encounter installation restrictions and will not be able to update without uninstalling the previous version." >> release_notes.md
+          echo "" >> release_notes.md
           echo "## English / English" >> release_notes.md
           echo "" >> release_notes.md
           
@@ -88,6 +90,8 @@ jobs:
           echo "## Japanese / 日本語" >> release_notes.md
           echo "" >> release_notes.md
           echo "> ⚠️ **注意**: このプロジェクトは完全にAIによって生成・コーディングされたものです。" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "> ⚠️ **署名なしAPKの注意**: これらのAPKは署名されていません。インストールに制限がある場合があり、古いバージョンをアンインストールしないと更新できない可能性があります。" >> release_notes.md
           echo "" >> release_notes.md
           echo "バージョン ${{ github.event.inputs.tag }} をリリースしました。" >> release_notes.md
           echo "" >> release_notes.md

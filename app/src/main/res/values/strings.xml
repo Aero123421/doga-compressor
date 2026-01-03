@@ -1,0 +1,107 @@
+<resources>
+    <string name="app_name">動画コンパク太</string>
+    
+    <!-- Worker / Notification -->
+    <string name="notification_channel_name">動画圧縮処理</string>
+    <string name="notification_title">動画を圧縮中...</string>
+    
+    <!-- General -->
+    <string name="unknown">不明</string>
+    <string name="back">戻る</string>
+    <string name="cancel">キャンセル</string>
+    <string name="close">閉じる</string>
+    <string name="done">完了</string>
+    <string name="save">保存</string>
+    <string name="delete">削除</string>
+    <string name="share">共有</string>
+    <string name="settings">設定</string>
+    
+    <!-- Library Screen -->
+    <string name="screen_library">ライブラリ</string>
+    <string name="no_videos_found">動画が見つかりません</string>
+    <string name="permission_required">動画へのアクセス権限が必要です</string>
+    <string name="grant_permission">権限を許可する</string>
+    <string name="refresh">再読み込み</string>
+    <string name="switch_view">表示切り替え</string>
+    <string name="sort_menu">並び替え</string>
+    <string name="sort_date_newest">日付 (新しい順)</string>
+    <string name="sort_date_oldest">日付 (古い順)</string>
+    <string name="sort_size_largest">サイズ (大きい順)</string>
+    <string name="sort_size_smallest">サイズ (小さい順)</string>
+    <string name="sort_name_az">名前 (A-Z)</string>
+    <string name="next_selected">次へ (%1$d)</string>
+    <string name="tasks_list">タスク一覧</string>
+    <string name="access_library_needed">動画ライブラリへのアクセスが必要です</string>
+
+    <!-- Preview Screen -->
+    <string name="screen_preview">プレビュー</string>
+    <string name="add_to_queue">キューに追加</string>
+    <string name="already_in_queue">この動画は既にキューに追加されています</string>
+    <string name="quality_preset">圧縮プリセット</string>
+    <string name="original_info">オリジナル: %1$s • %2$s</string>
+    <string name="estimated_size">予想サイズ: %1$s</string>
+    <string name="estimated_bitrate">ビットレート: %1$s</string>
+
+    <!-- Queue Screen -->
+    <string name="screen_queue">圧縮キュー</string>
+    <string name="queue_empty">キューは空です</string>
+    <string name="start_compression">圧縮を開始</string>
+    <string name="remove_item">削除</string>
+    <string name="total_size">合計サイズ: %1$s</string>
+    <string name="estimated_output">予想出力: %1$s</string>
+    <string name="savings">節約率: %1$s</string>
+    <string name="change_preset">プリセット変更</string>
+
+    <!-- Progress Screen -->
+    <string name="screen_active_tasks">実行中のタスク</string>
+    <string name="no_active_tasks">実行中の圧縮はありません</string>
+    <string name="status_processing">処理中...</string>
+    <string name="status_completed">完了</string>
+    <string name="status_failed">失敗</string>
+    <string name="status_cancelled">キャンセル済</string>
+    <string name="status_pending">待機中</string>
+    <string name="saved_to">保存先: %1$s</string>
+    
+    <!-- Result Screen -->
+    <string name="screen_results">圧縮結果</string>
+    <string name="no_results">まだ結果がありません</string>
+    <string name="clear_all">全て削除</string>
+    <string name="home">ホーム</string>
+    <string name="share_video">動画を共有</string>
+    <string name="msg_saved_to_gallery">ギャラリーに保存しました</string>
+    <string name="msg_failed_to_save">保存に失敗しました</string>
+    <string name="original_label">元動画</string>
+    <string name="compressed_label">圧縮後</string>
+    <string name="replace_original">元動画を置換</string>
+    <string name="success">成功</string>
+    <string name="error_prefix">エラー: %1$s</string>
+
+    <!-- Settings Screen -->
+    <string name="screen_settings">設定</string>
+    <string name="show_resolution">解像度を表示</string>
+    <string name="show_resolution_desc">ライブラリ一覧に動画の解像度を表示します</string>
+    <string name="max_selection">最大選択数</string>
+    <string name="max_selection_desc">一度に選択できる動画の最大数</string>
+    <string name="use_hevc">HEVC (H.265) を優先</string>
+    <string name="use_hevc_desc">対応デバイスで高効率圧縮を使用します (互換性が低下する場合があります)</string>
+    <string name="about_app">アプリについて</string>
+    <string name="version">バージョン %1$s</string>
+
+    <!-- Onboarding -->
+    <string name="welcome_title">動画コンパク太へようこそ</string>
+    <string name="welcome_desc">動画のサイズを簡単に小さくして、スマホの容量を節約しましょう。画質を保ったまま、共有しやすいサイズに圧縮できます。</string>
+    <string name="get_started">はじめる</string>
+
+    <!-- Presets -->
+    <string name="preset_quality">高画質</string>
+    <string name="preset_quality_desc">1.5GB/時 - 1080p (画質優先)</string>
+    <string name="preset_balanced">バランス</string>
+    <string name="preset_balanced_desc">800MB/時 - 1080p (推奨)</string>
+    <string name="preset_light">軽量</string>
+    <string name="preset_light_desc">470MB/時 - 1080p (共有向き)</string>
+    <string name="preset_small">小サイズ</string>
+    <string name="preset_small_desc">350MB/時 - 720p (SNS向き)</string>
+    <string name="preset_extrasmall">極小</string>
+    <string name="preset_extrasmall_desc">200MB/時 - 480p (確認用)</string>
+
+</resources>

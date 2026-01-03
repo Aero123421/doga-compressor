@@ -34,7 +34,8 @@ class CompressionEngine(private val context: Context) {
     fun compress(
         inputUri: Uri,
         outputFile: File,
-        preset: CompressionPreset,
+        targetBitrate: Int,
+        targetHeight: Int?,
         useHevc: Boolean = false
     ): Flow<CompressionStatus> = callbackFlow {
         val maskedUri = inputUri.toString().take(30) + "..."
@@ -56,33 +57,15 @@ class CompressionEngine(private val context: Context) {
             
             // Transformer initialization and start on Main thread
             withContext(Dispatchers.Main) {
-                // Get source metadata to prevent size increase
-                var sourceBitrate = 0
-                try {
-                    val retriever = android.media.MediaMetadataRetriever()
-                    retriever.setDataSource(context, inputUri)
-                    sourceBitrate = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_BITRATE)?.toInt() ?: 0
-                    retriever.release()
-                } catch (e: Exception) {
-                    Log.w("CompressionEngine", "Could not get source bitrate", e)
-                }
-
-                // Target bitrate: lower of (preset) or (source * 0.8)
-                val targetBitrate = if (sourceBitrate > 0) {
-                    minOf(preset.bitrate, (sourceBitrate * 0.8).toInt())
-                } else {
-                    preset.bitrate
-                }
-                
-                Log.d("CompressionEngine", "Source: $sourceBitrate bps -> Target: $targetBitrate bps")
+                Log.d("CompressionEngine", "Target: $targetBitrate bps")
 
                 val mediaItem = MediaItem.fromUri(inputUri)
 
                 // 解像度変更のエフェクトを作成
                 val videoEffects = mutableListOf<Effect>()
-                preset.height?.let { targetHeight ->
+                targetHeight?.let { height ->
                     videoEffects.add(
-                        Presentation.createForHeight(targetHeight)
+                        Presentation.createForHeight(height)
                     )
                 }
 

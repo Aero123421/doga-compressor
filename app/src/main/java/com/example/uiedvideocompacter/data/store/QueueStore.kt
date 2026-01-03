@@ -22,7 +22,8 @@ data class QueueItemData(
     val uri: String,
     val size: Long,
     val duration: Long,
-    val presetName: String
+    val presetName: String = "CUSTOM", // Deprecated, kept for compatibility
+    val compressionPercentage: Int = 50
 )
 
 class QueueStore(private val context: Context) {
@@ -130,14 +131,14 @@ class QueueStore(private val context: Context) {
         }
     }
 
-    suspend fun updatePreset(id: String, preset: CompressionPreset) {
+    suspend fun updateCompressionPercentage(id: String, percentage: Int) {
         context.queueDataStore.edit { preferences ->
             val currentJson = preferences[QUEUE_KEY]
             if (currentJson != null) {
                 try {
                     val currentList = json.decodeFromString<List<QueueItemData>>(currentJson)
                     val newList = currentList.map { 
-                        if (it.id == id) it.copy(presetName = preset.name) else it 
+                        if (it.id == id) it.copy(compressionPercentage = percentage) else it
                     }
                     preferences[QUEUE_KEY] = json.encodeToString(newList)
                 } catch (e: Exception) {

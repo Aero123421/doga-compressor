@@ -24,7 +24,7 @@ data class QueueItem(
     val uri: String,
     val size: Long,
     val duration: Long,
-    val preset: CompressionPreset
+    val compressionPercentage: Int
 ) {
     val sizeFormatted: String
         get() = "%.1f MB".format(size / (1024.0 * 1024.0))
@@ -38,7 +38,7 @@ data class QueueItem(
         }
 
     val estimatedSizeFormatted: String
-        get() = "%.1f MB".format(preset.getEstimatedSize(duration) / (1024.0 * 1024.0))
+        get() = "%.1f MB".format((size * (compressionPercentage / 100.0)) / (1024.0 * 1024.0))
 }
 
 class QueueViewModel(application: Application) : AndroidViewModel(application) {
@@ -67,11 +67,7 @@ class QueueViewModel(application: Application) : AndroidViewModel(application) {
                     uri = data.uri,
                     size = data.size,
                     duration = data.duration,
-                    preset = try {
-                        CompressionPreset.valueOf(data.presetName)
-                    } catch (e: Exception) {
-                        CompressionPreset.BALANCED
-                    }
+                    compressionPercentage = data.compressionPercentage
                 )
             }
             _queueItems.value = items
@@ -86,9 +82,9 @@ class QueueViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    fun updatePreset(id: String, preset: CompressionPreset) {
+    fun updatePreset(id: String, percentage: Int) {
         viewModelScope.launch {
-            queueStore.updatePreset(id, preset)
+            queueStore.updateCompressionPercentage(id, percentage)
             loadQueue()
         }
     }
@@ -106,11 +102,7 @@ class QueueViewModel(application: Application) : AndroidViewModel(application) {
                         uri = data.uri,
                         size = data.size,
                         duration = data.duration,
-                        preset = try {
-                            CompressionPreset.valueOf(data.presetName)
-                        } catch (e: Exception) {
-                            CompressionPreset.BALANCED
-                        }
+                        compressionPercentage = data.compressionPercentage
                     )
                 }
                 val workManager = WorkManager.getInstance(getApplication())
@@ -146,9 +138,10 @@ class QueueViewModel(application: Application) : AndroidViewModel(application) {
             .setInputData(
                 workDataOf(
                     CompressionWorker.KEY_INPUT_URI to item.uri,
-                    CompressionWorker.KEY_PRESET_NAME to item.preset.name,
+                    CompressionWorker.KEY_COMPRESSION_PERCENTAGE to item.compressionPercentage,
                     CompressionWorker.KEY_ORIGINAL_SIZE to item.size,
                     CompressionWorker.KEY_ORIGINAL_NAME to item.name,
+                    CompressionWorker.KEY_DURATION to item.duration,
                     "item_id" to item.id
                 )
             )
@@ -164,7 +157,7 @@ class QueueViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun calculateStats(items: List<QueueItem>) {
         val totalBytes = items.sumOf { it.size }
-        val estimatedBytes = items.sumOf { it.preset.getEstimatedSize(it.duration) }
+        val estimatedBytes = items.sumOf { (it.size * (it.compressionPercentage / 100.0)).toLong() }
 
         _totalSize.value = "%.1f MB".format(totalBytes / (1024.0 * 1024.0))
         _estimatedSize.value = "%.1f MB".format(estimatedBytes / (1024.0 * 1024.0))

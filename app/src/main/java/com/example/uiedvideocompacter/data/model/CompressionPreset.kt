@@ -1,5 +1,6 @@
 package com.example.uiedvideocompacter.data.model
 
+@Deprecated("Use percentage based compression instead")
 enum class CompressionPreset(
     val title: String,
     val description: String,

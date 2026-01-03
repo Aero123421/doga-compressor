@@ -27,9 +27,11 @@ class CompressionWorker(
     companion object {
         const val KEY_INPUT_URI = "input_uri"
         const val KEY_OUTPUT_PATH = "output_path"
-        const val KEY_PRESET_NAME = "preset_name"
+        const val KEY_PRESET_NAME = "preset_name" // Deprecated
+        const val KEY_COMPRESSION_PERCENTAGE = "compression_percentage"
         const val KEY_ORIGINAL_SIZE = "original_size"
         const val KEY_ORIGINAL_NAME = "original_name"
+        const val KEY_DURATION = "duration"
 
         const val CHANNEL_ID = "compression_channel"
         const val NOTIFICATION_ID = 1
@@ -55,15 +57,73 @@ class CompressionWorker(
             return Result.failure(workDataOf("error" to "Invalid input URI"))
         }
 
-        val presetName = inputData.getString(KEY_PRESET_NAME) ?: CompressionPreset.BALANCED.name
-        val preset = try {
-            CompressionPreset.valueOf(presetName)
-        } catch (e: Exception) {
-            CompressionPreset.BALANCED
-        }
+        val compressionPercentage = inputData.getInt(KEY_COMPRESSION_PERCENTAGE, 50)
 
         val originalSize = inputData.getLong(KEY_ORIGINAL_SIZE, 0L)
         val originalName = inputData.getString(KEY_ORIGINAL_NAME) ?: applicationContext.getString(com.example.uiedvideocompacter.R.string.app_name)
+
+        // Calculate target bitrate based on percentage
+        // If duration is not passed, try to fetch it
+        var durationMs = inputData.getLong(KEY_DURATION, 0L)
+        if (durationMs == 0L) {
+             try {
+                val retriever = android.media.MediaMetadataRetriever()
+                retriever.setDataSource(applicationContext, inputUri)
+                durationMs = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLong() ?: 0L
+                retriever.release()
+            } catch (e: Exception) {
+                android.util.Log.e("CompressionWorker", "Could not get duration", e)
+            }
+        }
+
+        // Logic to determine target bitrate and resolution
+        var targetBitrate = 0
+        var targetHeight: Int? = null
+
+        if (durationMs > 0 && originalSize > 0) {
+            val targetSize = originalSize * (compressionPercentage / 100.0)
+            // Bitrate = SizeInBits / DurationInSeconds
+            targetBitrate = ((targetSize * 8) / (durationMs / 1000.0)).toInt()
+        } else {
+            // Fallback if we can't calculate: use a safe default or rely on the deprecated preset method if needed
+            // But let's assume we want to enforce the new logic.
+            // If we fail to calculate, let's default to a "Balanced" like bitrate: ~2Mbps
+             targetBitrate = 2_000_000
+        }
+
+        // Adaptive Resolution Logic
+        // Check if bitrate is too low for current resolution
+        var originalHeight = 1080 // Default assumption
+        try {
+            val retriever = android.media.MediaMetadataRetriever()
+            retriever.setDataSource(applicationContext, inputUri)
+            val h = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toInt() ?: 0
+            val w = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toInt() ?: 0
+            val r = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION)?.toInt() ?: 0
+
+            // Swap if rotated
+            originalHeight = if (r == 90 || r == 270) w else h
+            if (originalHeight == 0) originalHeight = 1080
+            retriever.release()
+        } catch (e: Exception) {
+             android.util.Log.e("CompressionWorker", "Could not get original height", e)
+        }
+
+        // Heuristics:
+        // If 1080p+ and < 750kbps -> 720p
+        // If 720p+ and < 400kbps -> 480p
+        if (originalHeight >= 1080 && targetBitrate < 750_000) {
+            targetHeight = 720
+        } else if (originalHeight >= 720 && targetBitrate < 400_000) {
+            targetHeight = 480
+        } else {
+            targetHeight = null // Keep original
+        }
+
+        // Ensure we don't upscale if original was smaller than target (e.g. original 480p, target 720p logic shouldn't trigger, but just in case)
+        if (targetHeight != null && targetHeight >= originalHeight) {
+            targetHeight = null
+        }
 
         val outputName = "compressed_${System.currentTimeMillis()}.mp4"
         val outputDir = applicationContext.getExternalFilesDir(android.os.Environment.DIRECTORY_MOVIES)
@@ -92,7 +152,7 @@ class CompressionWorker(
         var finalResult = Result.failure()
 
         try {
-            engine.compress(inputUri, outputFile, preset, useHevc).collect { status ->
+            engine.compress(inputUri, outputFile, targetBitrate, targetHeight, useHevc).collect { status ->
                 when (status) {
                     is CompressionStatus.Progress -> {
                         setForeground(createForegroundInfo(status.progress))

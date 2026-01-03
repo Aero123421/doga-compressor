@@ -24,7 +24,7 @@ class PreviewViewModel(application: Application) : AndroidViewModel(application)
     var player by mutableStateOf<ExoPlayer?>(null)
         private set
         
-    var selectedPreset by mutableStateOf(CompressionPreset.BALANCED)
+    var compressionPercentage by mutableStateOf(50)
         private set
         
     var estimatedSize by mutableStateOf("Calculating...")
@@ -63,8 +63,8 @@ class PreviewViewModel(application: Application) : AndroidViewModel(application)
         player = null
     }
 
-    fun selectPreset(preset: CompressionPreset) {
-        selectedPreset = preset
+    fun setCompressionPercentage(percentage: Int) {
+        compressionPercentage = percentage
         updateEstimation()
     }
 
@@ -90,22 +90,12 @@ class PreviewViewModel(application: Application) : AndroidViewModel(application)
             }
 
             withContext(Dispatchers.Main) {
-                if (totalDurationMs > 0) {
-                    val estSize = selectedPreset.getEstimatedSize(totalDurationMs)
+                if (totalOriginalSizeBytes > 0) {
+                    val finalEstSize = (totalOriginalSizeBytes * (compressionPercentage / 100.0)).toLong()
                     
-                    // Always guarantee at least some reduction in the UI estimate
-                    // If estimate is larger than original, show it as 80% of original
-                    val finalEstSize = if (estSize > totalOriginalSizeBytes && totalOriginalSizeBytes > 0) {
-                        (totalOriginalSizeBytes * 0.8).toLong()
-                    } else {
-                        estSize
-                    }
-
                     val sizeMb = finalEstSize / (1024.0 * 1024.0)
                     val originalMb = totalOriginalSizeBytes / (1024.0 * 1024.0)
-                    val savingPercent = if (totalOriginalSizeBytes > 0) {
-                        ((totalOriginalSizeBytes - finalEstSize).toFloat() / totalOriginalSizeBytes * 100).toInt()
-                    } else 0
+                    val savingPercent = 100 - compressionPercentage
 
                     estimatedSize = String.format("~%.1f MB (元: %.1f MB / -%d%%)", sizeMb, originalMb, savingPercent)
                 } else {

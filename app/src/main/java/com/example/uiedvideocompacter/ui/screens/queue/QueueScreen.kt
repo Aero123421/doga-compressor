@@ -151,10 +151,8 @@ fun QueueScreen(
 fun QueueItemRow(
     item: QueueItem,
     onRemove: () -> Unit,
-    onUpdatePreset: (CompressionPreset) -> Unit
+    onUpdatePreset: (Int) -> Unit
 ) {
-    var showPresetMenu by remember { mutableStateOf(false) }
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -191,31 +189,14 @@ fun QueueItemRow(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Box {
-                    AssistChip(
-                        onClick = { showPresetMenu = true },
-                        label = { Text(item.preset.title) },
-                        leadingIcon = { Icon(Icons.Default.Settings, contentDescription = null, Modifier.size(16.dp)) }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Settings, contentDescription = null, Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "圧縮率: ${item.compressionPercentage}%",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    DropdownMenu(
-                        expanded = showPresetMenu,
-                        onDismissRequest = { showPresetMenu = false }
-                    ) {
-                        CompressionPreset.values().forEach { preset ->
-                            DropdownMenuItem(
-                                text = { 
-                                    Column {
-                                        Text(preset.title)
-                                        Text(preset.description, style = MaterialTheme.typography.labelSmall)
-                                    }
-                                },
-                                onClick = {
-                                    onUpdatePreset(preset)
-                                    showPresetMenu = false
-                                }
-                            )
-                        }
-                    }
                 }
                 Text(
                     text = stringResource(R.string.estimated_output, item.estimatedSizeFormatted),

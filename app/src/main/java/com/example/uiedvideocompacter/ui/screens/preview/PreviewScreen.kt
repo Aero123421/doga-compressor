@@ -92,7 +92,7 @@ fun PreviewScreen(
     
     LaunchedEffect(uris) {
         viewModel.setUris(uris)
-        viewModel.selectPreset(CompressionPreset.BALANCED)
+        viewModel.setCompressionPercentage(50)
     }
     
     DisposableEffect(Unit) {
@@ -229,72 +229,55 @@ fun PreviewScreen(
             Spacer(modifier = Modifier.height(24.dp))
             
             Text(
-                "全動画に適用するプリセット",
+                "圧縮設定",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(horizontal = 24.dp),
                 color = MaterialTheme.colorScheme.primary
             )
             
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             
-            LazyColumn(
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+            Card(
+                 modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
             ) {
-                items(CompressionPreset.values().size) { index ->
-                    val preset = CompressionPreset.values()[index]
-                    PresetItem(
-                        preset = preset,
-                        isSelected = viewModel.selectedPreset == preset,
-                        onClick = { viewModel.selectPreset(preset) }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
-            }
-        }
-    }
-}
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("目標サイズ: ${viewModel.compressionPercentage}%")
+                        Text("${100 - viewModel.compressionPercentage}% 削減")
+                    }
 
-@Composable
-fun PresetItem(
-    preset: CompressionPreset,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    val borderColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
-    val containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant
-    
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = containerColor),
-        border = androidx.compose.foundation.BorderStroke(2.dp, borderColor)
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    preset.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    preset.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                )
-            }
-            if (isSelected) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = stringResource(R.string.done),
-                    tint = MaterialTheme.colorScheme.primary
-                )
+                    androidx.compose.material3.Slider(
+                        value = viewModel.compressionPercentage.toFloat(),
+                        onValueChange = { viewModel.setCompressionPercentage(it.toInt()) },
+                        valueRange = 10f..100f,
+                        steps = 17, // (100-10)/5 - 1 = 17 steps for 5% increments roughly
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    if (viewModel.compressionPercentage < 30) {
+                         Text(
+                            "※ 設定値が低すぎるため、画質が大幅に低下するか、自動的に解像度が下がる可能性があります。",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    } else if (viewModel.compressionPercentage > 90) {
+                        Text(
+                            "※ ほとんど圧縮されません。",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.tertiary,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+                }
             }
         }
     }

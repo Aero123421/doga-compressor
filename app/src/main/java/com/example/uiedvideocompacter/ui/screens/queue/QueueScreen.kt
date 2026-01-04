@@ -193,8 +193,8 @@ fun QueueItemRow(
                 Spacer(modifier = Modifier.height(4.dp))
                 Box {
                     AssistChip(
-                        onClick = { showPresetMenu = true },
-                        label = { Text(item.preset.title) },
+                        onClick = { if (item.targetPercentage == null) showPresetMenu = true },
+                        label = { Text(item.compressionLabel) },
                         leadingIcon = { Icon(Icons.Default.Settings, contentDescription = null, Modifier.size(16.dp)) }
                     )
                     DropdownMenu(

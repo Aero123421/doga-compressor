@@ -61,6 +61,9 @@ class CompressionWorker(
         } catch (e: Exception) {
             CompressionPreset.BALANCED
         }
+        
+        val targetPercentageRaw = inputData.getInt("target_percentage", -1)
+        val targetPercentage = if (targetPercentageRaw != -1) targetPercentageRaw else null
 
         val originalSize = inputData.getLong(KEY_ORIGINAL_SIZE, 0L)
         val originalName = inputData.getString(KEY_ORIGINAL_NAME) ?: applicationContext.getString(com.example.uiedvideocompacter.R.string.app_name)
@@ -92,7 +95,7 @@ class CompressionWorker(
         var finalResult = Result.failure()
 
         try {
-            engine.compress(inputUri, outputFile, preset, useHevc).collect { status ->
+            engine.compress(inputUri, outputFile, preset, useHevc, targetPercentage).collect { status ->
                 when (status) {
                     is CompressionStatus.Progress -> {
                         setForeground(createForegroundInfo(status.progress))

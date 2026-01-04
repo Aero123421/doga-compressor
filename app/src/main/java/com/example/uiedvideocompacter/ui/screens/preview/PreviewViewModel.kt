@@ -24,7 +24,7 @@ class PreviewViewModel(application: Application) : AndroidViewModel(application)
     var player by mutableStateOf<ExoPlayer?>(null)
         private set
         
-    var selectedPreset by mutableStateOf(CompressionPreset.BALANCED)
+    var targetPercentage by mutableStateOf(50) // Default 50%
         private set
         
     var estimatedSize by mutableStateOf("Calculating...")
@@ -63,8 +63,8 @@ class PreviewViewModel(application: Application) : AndroidViewModel(application)
         player = null
     }
 
-    fun selectPreset(preset: CompressionPreset) {
-        selectedPreset = preset
+    fun updateTargetPercentage(percentage: Int) {
+        targetPercentage = percentage
         updateEstimation()
     }
 
@@ -75,6 +75,7 @@ class PreviewViewModel(application: Application) : AndroidViewModel(application)
             
             videoUris.forEach { uri ->
                 try {
+                    // Duration is less important for size calc now, but good for display if needed
                     val retriever = android.media.MediaMetadataRetriever()
                     retriever.setDataSource(getApplication(), uri)
                     val duration = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLong() ?: 0L
@@ -90,22 +91,13 @@ class PreviewViewModel(application: Application) : AndroidViewModel(application)
             }
 
             withContext(Dispatchers.Main) {
-                if (totalDurationMs > 0) {
-                    val estSize = selectedPreset.getEstimatedSize(totalDurationMs)
-                    
-                    // Always guarantee at least some reduction in the UI estimate
-                    // If estimate is larger than original, show it as 80% of original
-                    val finalEstSize = if (estSize > totalOriginalSizeBytes && totalOriginalSizeBytes > 0) {
-                        (totalOriginalSizeBytes * 0.8).toLong()
-                    } else {
-                        estSize
-                    }
+                if (totalOriginalSizeBytes > 0) {
+                    // Target size = Original * (Percentage / 100)
+                    val finalEstSize = (totalOriginalSizeBytes * (targetPercentage / 100.0)).toLong()
 
                     val sizeMb = finalEstSize / (1024.0 * 1024.0)
                     val originalMb = totalOriginalSizeBytes / (1024.0 * 1024.0)
-                    val savingPercent = if (totalOriginalSizeBytes > 0) {
-                        ((totalOriginalSizeBytes - finalEstSize).toFloat() / totalOriginalSizeBytes * 100).toInt()
-                    } else 0
+                    val savingPercent = 100 - targetPercentage
 
                     estimatedSize = String.format("~%.1f MB (元: %.1f MB / -%d%%)", sizeMb, originalMb, savingPercent)
                 } else {
@@ -151,7 +143,8 @@ class PreviewViewModel(application: Application) : AndroidViewModel(application)
                     uri = uri.toString(),
                     size = size,
                     duration = duration,
-                    presetName = selectedPreset.name
+                    presetName = "CUSTOM", // Legacy field
+                    targetPercentage = targetPercentage
                 )
             }
             queueStore.addAllToQueue(items)

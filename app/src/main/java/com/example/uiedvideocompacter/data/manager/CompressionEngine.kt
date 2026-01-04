@@ -35,11 +35,12 @@ class CompressionEngine(private val context: Context) {
         inputUri: Uri,
         outputFile: File,
         preset: CompressionPreset,
-        useHevc: Boolean = false
+        useHevc: Boolean = false,
+        targetPercentage: Int? = null
     ): Flow<CompressionStatus> = callbackFlow {
         val maskedUri = inputUri.toString().take(30) + "..."
         val maskedPath = outputFile.name
-        Log.d("CompressionEngine", "Starting compression for $maskedUri to $maskedPath (HEVC: $useHevc)")
+        Log.d("CompressionEngine", "Starting compression for $maskedUri to $maskedPath (HEVC: $useHevc, Target%: $targetPercentage)")
 
         // Declare variables visible to awaitClose
         var transformer: Transformer? = null
@@ -56,34 +57,87 @@ class CompressionEngine(private val context: Context) {
             
             // Transformer initialization and start on Main thread
             withContext(Dispatchers.Main) {
-                // Get source metadata to prevent size increase
+                // Get source metadata
                 var sourceBitrate = 0
+                var durationMs = 0L
+                var width = 1920
+                var height = 1080
+                
                 try {
                     val retriever = android.media.MediaMetadataRetriever()
                     retriever.setDataSource(context, inputUri)
                     sourceBitrate = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_BITRATE)?.toInt() ?: 0
+                    durationMs = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLong() ?: 0L
+                    width = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH)?.toInt() ?: 1920
+                    height = retriever.extractMetadata(android.media.MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT)?.toInt() ?: 1080
                     retriever.release()
                 } catch (e: Exception) {
-                    Log.w("CompressionEngine", "Could not get source bitrate", e)
+                    Log.w("CompressionEngine", "Could not get source metadata", e)
                 }
 
-                // Target bitrate: lower of (preset) or (source * 0.8)
-                val targetBitrate = if (sourceBitrate > 0) {
-                    minOf(preset.bitrate, (sourceBitrate * 0.8).toInt())
-                } else {
-                    preset.bitrate
+                // Calculate Target Bitrate and Resolution
+                var finalTargetBitrate = 0
+                var finalTargetHeight = preset.height
+                
+                if (targetPercentage != null && durationMs > 0) {
+                    var originalSize = 0L
+                    try {
+                        context.contentResolver.openFileDescriptor(inputUri, "r")?.use { pfd ->
+                            originalSize = pfd.statSize
+                        }
+                    } catch (e: Exception) {
+                        Log.w("CompressionEngine", "Could not get file size", e)
+                    }
+
+                    if (originalSize > 0) {
+                        // Calculate target bits: (OriginalBytes * Percentage/100) * 8
+                        val targetSizeBits = (originalSize * (targetPercentage / 100.0) * 8).toLong()
+                        val durationSec = durationMs / 1000.0
+                        val calculatedBitrate = (targetSizeBits / durationSec).toInt()
+                        
+                        finalTargetBitrate = calculatedBitrate
+                        
+                        // Adaptive Resolution Safety Check
+                        // Bits Per Pixel (BPP) = Bitrate / (Width * Height * FPS)
+                        // FPS assumed 30 for safety estimation
+                        val pixelCount = width * height
+                        if (pixelCount > 0) {
+                            val bpp = calculatedBitrate.toDouble() / (pixelCount * 30)
+                            Log.d("CompressionEngine", "Adaptive Check: Bitrate=$calculatedBitrate, BPP=$bpp")
+                            
+                            // If BPP is too low (below 0.05), quality will be blocky. Downscale.
+                            if (bpp < 0.05) {
+                                if (height > 1080) finalTargetHeight = 1080
+                                else if (height > 720) finalTargetHeight = 720
+                                else if (height > 480) finalTargetHeight = 480
+                                Log.d("CompressionEngine", "BPP too low, downscaling to ${finalTargetHeight}p")
+                            } else {
+                                finalTargetHeight = null // Keep original
+                            }
+                        }
+                    }
+                }
+
+                // Fallback if adaptive failed or not requested
+                if (finalTargetBitrate == 0) {
+                    finalTargetBitrate = if (sourceBitrate > 0) {
+                        minOf(preset.bitrate, (sourceBitrate * 0.8).toInt())
+                    } else {
+                        preset.bitrate
+                    }
                 }
                 
-                Log.d("CompressionEngine", "Source: $sourceBitrate bps -> Target: $targetBitrate bps")
+                Log.d("CompressionEngine", "Source: $sourceBitrate bps -> Target: $finalTargetBitrate bps, Height: $finalTargetHeight")
 
                 val mediaItem = MediaItem.fromUri(inputUri)
 
-                // 解像度変更のエフェクトを作成
+                // Create Effects
                 val videoEffects = mutableListOf<Effect>()
-                preset.height?.let { targetHeight ->
-                    videoEffects.add(
-                        Presentation.createForHeight(targetHeight)
-                    )
+                finalTargetHeight?.let { targetH ->
+                    // Only apply if target is smaller than source to avoid upscaling
+                    if (targetH < height) {
+                         videoEffects.add(Presentation.createForHeight(targetH))
+                    }
                 }
 
                 val editedMediaItem = EditedMediaItem.Builder(mediaItem)
@@ -93,7 +147,7 @@ class CompressionEngine(private val context: Context) {
                     .build()
 
                 val encoderSettings = VideoEncoderSettings.Builder()
-                    .setBitrate(targetBitrate)
+                    .setBitrate(finalTargetBitrate)
                     .setBitrateMode(android.media.MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_VBR)
                     .build()
 

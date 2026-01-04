@@ -22,7 +22,8 @@ data class QueueItemData(
     val uri: String,
     val size: Long,
     val duration: Long,
-    val presetName: String
+    val presetName: String,
+    val targetPercentage: Int? = null
 )
 
 class QueueStore(private val context: Context) {

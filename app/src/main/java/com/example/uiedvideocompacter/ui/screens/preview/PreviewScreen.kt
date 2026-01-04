@@ -53,7 +53,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.ui.PlayerView
 import com.example.uiedvideocompacter.R
-import com.example.uiedvideocompacter.data.model.CompressionPreset
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,7 +92,7 @@ fun PreviewScreen(
     
     LaunchedEffect(uris) {
         viewModel.setUris(uris)
-        viewModel.selectPreset(CompressionPreset.BALANCED)
+        viewModel.updateTargetPercentage(50)
     }
     
     DisposableEffect(Unit) {

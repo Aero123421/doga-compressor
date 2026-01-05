@@ -5,8 +5,8 @@
 <div align="center">
 
 [![Android](https://img.shields.io/badge/Android-31%2B-green?logo=android)](https://developer.android.com)
-[![Kotlin](https://img.shields.io/badge/Kotlin-1.9-blue?logo=kotlin)](https://kotlinlang.org)
-[![Compose](https://img.shields.io/badge/Jetpack%20Compose-1.6-purple?logo=jetpackcompose)](https://developer.android.com/jetpack/compose)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.0-blue?logo=kotlin)](https://kotlinlang.org)
+[![Compose](https://img.shields.io/badge/Jetpack%20Compose-Material3-purple?logo=jetpackcompose)](https://developer.android.com/jetpack/compose)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 動画を簡単に圧縮して、スマホの容量を節約
@@ -19,22 +19,23 @@
 
 ## ✨ 特徴
 
-- 🎬 **複数の圧縮プリセット** - 高画質から極小まで5つのプリセット
+- 🎬 **ファイルサイズ指定圧縮** - 元動画の10%〜100%の範囲で目標サイズを柔軟に指定可能
+- 📉 **自動解像度調整 (Adaptive Resolution)** - 低ビットレート時に自動で解像度を下げ、ブロックノイズを防ぎます
 - 📊 **バッチ処理** - 複数の動画をキューに追加して一括圧縮
 - 🎨 **モダンなUI** - Material Design 3 + Jetpack Compose
-- 🔔 **バックグラウンド処理** - WorkManagerを使用した非同期圧縮
+- 🔔 **バックグラウンド処理** - WorkManagerを使用した堅牢な非同期圧縮
 - 📱 **Android 31+対応** - 最新のAndroid機能を活用
 
 ## 📦 技術スタック
 
 | カテゴリ | 技術 |
 |----------|------|
-| 言語 | Kotlin |
+| 言語 | Kotlin (2.0.21) |
 | UI | Jetpack Compose (Material 3) |
-| ビデオ処理 | Media3 (ExoPlayer, Transformer, Effect) |
+| ビデオ処理 | Media3 (Transformer, Effect) |
 | バックグラウンド処理 | WorkManager |
+| 画像ローディング | Coil |
 | 状態管理 | ViewModel + DataStore |
-| 依存性注入 | なし (シンプルな構成) |
 | 非同期処理 | Kotlin Coroutines + Flow |
 
 ## 🔑 必要な権限
@@ -42,18 +43,16 @@
 アプリを正常に動作させるために、以下の権限を使用します：
 
 - **通知 (POST_NOTIFICATIONS)**: 圧縮の進行状況や完了をバックグラウンドで通知するために使用します。
-- **メディアアクセス (READ_MEDIA_VIDEO / READ_EXTERNAL_STORAGE)**: デバイス内の動画ファイルを選択・圧縮するために必要です。
-- **フォアグラウンドサービス (FOREGROUND_SERVICE_MEDIA_PROCESSING)**: アプリを閉じても圧縮処理を継続するために使用します。
+- **メディアアクセス (READ_MEDIA_VIDEO / READ_EXTERNAL_STORAGE)**: デバイス内の動画ファイルを選択・圧縮するために必要です（Android 13未満はREAD_EXTERNAL_STORAGEを使用）。
+- **フォアグラウンドサービス (FOREGROUND_SERVICE / MEDIA_PROCESSING)**: アプリを閉じても圧縮処理を継続するために使用します。
 
-## 🎯 圧縮プリセット
+## 🎯 圧縮ロジックについて
 
-| プリセット | ビットレート | 解像度 | 用途 |
-|-----------|-------------|--------|------|
-| 高画質 | 1.5GB/時 | 1080p | 画質を優先 |
-| バランス | 800MB/時 | 1080p | 一般的な用途 (推奨) |
-| 軽量 | 470MB/時 | 1080p | 共有向き |
-| 小サイズ | 350MB/時 | 720p | SNS投稿向き |
-| 極小 | 200MB/時 | 480p | 確認用 |
+本アプリは固定プリセットではなく、**「元のファイルサイズの何％にするか」** という直感的な指定方法を採用しています。
+
+1. **目標サイズの計算**: `元ファイルサイズ × 指定％` で目標サイズを決定
+2. **ビットレートの算出**: 目標サイズと動画時間から必要なビットレートを逆算
+3. **画質保護 (Adaptive Resolution)**: 算出されたビットレートが解像度に対して低すぎる場合（Bits Per Pixel < 0.05）、画質崩壊を防ぐために自動的に解像度をダウンサイズします（例：1080p → 720p）。
 
 ## ⬇️ ダウンロード
 
@@ -70,8 +69,8 @@
 ### 環境要件
 
 - Android Studio Hedgehog (2023.1.1) 以上
-- JDK 11 以上
-- Android SDK 36
+- **JDK 17** (AGP 8.x要件のため)
+- Android SDK 36 (Compile SDK) / 31 (Min SDK)
 
 ### ビルド手順
 
@@ -93,10 +92,10 @@ cd UIedvideocompacter
 端末内の動画を一覧表示、ソート、検索
 
 ### プレビュー
-選択した動画の圧縮プレビュー、プリセット選択
+選択した動画の再生確認、目標圧縮率（％）の設定
 
 ### 圧縮キュー
-圧縮待ちの動画一覧、プリセット変更
+圧縮待ちの動画一覧
 
 ### 実行中タスク (Progress)
 現在進行中の圧縮処理の監視
@@ -105,7 +104,7 @@ cd UIedvideocompacter
 圧縮済み動画の閲覧、共有、元動画との比較
 
 ### 設定
-アプリの設定、プリセットのカスタマイズ
+アプリの設定（並列実行数など）
 
 ## 📁 プロジェクト構成
 
@@ -114,62 +113,32 @@ app/src/main/java/com/example/uiedvideocompacter/
 ├── MainActivity.kt                 # アプリのエントリーポイント
 ├── data/
 │   ├── manager/
-│   │   ├── CompressionEngine.kt     # 圧縮エンジン
+│   │   ├── CompressionEngine.kt     # 圧縮エンジン (Media3 Transformer)
 │   │   └── CompressionWorker.kt     # WorkManager Worker
 │   ├── model/
-│   │   ├── CompressionPreset.kt    # プリセットデータモデル
-│   │   ├── VideoItem.kt           # 動画データモデル
-│   │   └── SearchSuggestionTags.kt # 検索タグ
+│   │   ├── VideoItem.kt             # 動画データモデル
+│   │   └── SearchSuggestionTags.kt  # 検索タグ
 │   ├── repository/
-│   │   └── VideoRepository.kt      # 動画リポジトリ
+│   │   └── VideoRepository.kt       # 動画リポジトリ
 │   └── store/
-│       ├── QueueStore.kt          # キュー状態管理
-│       ├── ResultStore.kt         # 結果状態管理
-│       └── UserPreferences.kt     # ユーザー設定
+│       ├── QueueStore.kt            # キュー状態管理
+│       ├── ResultStore.kt           # 結果状態管理
+│       └── UserPreferences.kt       # ユーザー設定
 ├── ui/
-│   ├── components/
-│   │   └── VideoThumbnail.kt      # 動画サムネイル
+│   ├── components/                  # 共通コンポーネント
 │   ├── navigation/
-│   │   ├── AppNavHost.kt          # ナビゲーション
-│   │   └── Screen.kt              # 画面定義
+│   │   ├── AppNavHost.kt            # ナビゲーション定義
+│   │   └── Screen.kt                # 画面定義
 │   ├── screens/
-│   │   ├── library/               # ライブラリ画面
-│   │   ├── preview/               # プレビュー画面
-│   │   ├── queue/                  # キュー画面
-│   │   ├── progress/               # 実行中タスク画面
-│   │   ├── result/                 # 結果画面
-│   │   ├── settings/               # 設定画面
-│   │   └── onboarding/            # オンボーディング画面
-│   └── theme/                      # テーマ設定
+│   │   ├── library/                 # ライブラリ画面
+│   │   ├── preview/                 # プレビュー・設定画面
+│   │   ├── queue/                   # キュー画面
+│   │   ├── progress/                # 実行中タスク画面
+│   │   ├── result/                  # 結果画面
+│   │   ├── settings/                # 設定画面
+│   │   └── onboarding/              # オンボーディング画面
+│   └── theme/                       # テーマ設定
 ```
-
-## 🛠️ 主要ライブラリ
-
-```kotlin
-// Jetpack Compose
-implementation(platform(libs.androidx.compose.bom))
-implementation(libs.androidx.compose.ui)
-implementation(libs.androidx.compose.material3)
-
-// Media3
-implementation(libs.androidx.media3.exoplayer)
-implementation(libs.androidx.media3.transformer)
-implementation(libs.androidx.media3.effect)
-
-// その他
-implementation(libs.androidx.work.runtime.ktx)
-implementation(libs.androidx.navigation.compose)
-implementation(libs.io.coil.compose)
-```
-
-## 📝 開発計画
-
-- [ ] カスタムプリセットの作成・保存
-- [ ] クラウドストレージ連携
-- [ ] 圧縮履歴の統計表示
-- [ ] トラックの選択的な削除
-- [ ] GIF変換機能
-- [ ] Dark Modeの最適化
 
 ## 🤝 コントリビューション
 
@@ -204,8 +173,8 @@ Made with ❤️ by Aero123421
 <div align="center">
 
 [![Android](https://img.shields.io/badge/Android-31%2B-green?logo=android)](https://developer.android.com)
-[![Kotlin](https://img.shields.io/badge/Kotlin-1.9-blue?logo=kotlin)](https://kotlinlang.org)
-[![Compose](https://img.shields.io/badge/Jetpack%20Compose-1.6-purple?logo=jetpackcompose)](https://developer.android.com/jetpack/compose)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.0-blue?logo=kotlin)](https://kotlinlang.org)
+[![Compose](https://img.shields.io/badge/Jetpack%20Compose-Material3-purple?logo=jetpackcompose)](https://developer.android.com/jetpack/compose)
 
 Easily compress videos and save your phone storage
 
@@ -215,11 +184,20 @@ Easily compress videos and save your phone storage
 
 ## ✨ Features
 
-- 🎬 **Multiple Compression Presets** - 5 presets from high quality to ultra small
+- 🎬 **Percentage-based Compression** - Flexibly set target file size from 10% to 100%
+- 📉 **Adaptive Resolution** - Automatically downscales resolution to prevent quality loss when bitrate is too low
 - 📊 **Batch Processing** - Add multiple videos to queue for batch compression
 - 🎨 **Modern UI** - Material Design 3 + Jetpack Compose
-- 🔔 **Background Processing** - Asynchronous compression with WorkManager
+- 🔔 **Background Processing** - Robust asynchronous compression with WorkManager
 - 📱 **Android 31+ Support** - Leveraging latest Android features
+
+## 🎯 Compression Logic
+
+Instead of fixed presets, this app uses a **Target Percentage** approach:
+
+1. **Target Calculation**: `Original Size * Percentage` = Target Size
+2. **Bitrate Calculation**: Calculates required bitrate based on target size and duration.
+3. **Quality Protection**: If the calculated bitrate is too low for the current resolution (Bits Per Pixel < 0.05), the app automatically downscales the video (e.g., 1080p -> 720p) to avoid blocky artifacts.
 
 ## ⬇️ Download
 
@@ -237,14 +215,14 @@ This app requires the following permissions to function correctly:
 
 - **Notifications (POST_NOTIFICATIONS)**: Used to show compression progress and completion status in the background.
 - **Media Access (READ_MEDIA_VIDEO / READ_EXTERNAL_STORAGE)**: Required to select and compress video files from your device.
-- **Foreground Service (FOREGROUND_SERVICE_MEDIA_PROCESSING)**: Allows the app to continue compressing videos even when the app is closed.
+- **Foreground Service (FOREGROUND_SERVICE / MEDIA_PROCESSING)**: Allows the app to continue compressing videos even when the app is closed.
 
 ## 🚀 Quick Start
 
 ### Requirements
 
 - Android Studio Hedgehog (2023.1.1) or higher
-- JDK 11 or higher
+- **JDK 17** (Required for AGP 8.x)
 - Android SDK 36
 
 ### Build
@@ -261,24 +239,11 @@ cd UIedvideocompacter
 ./gradlew installDebug
 ```
 
-## 📂 Project Structure
-
-```
-app/src/main/java/com/example/uiedvideocompacter/
-├── MainActivity.kt                 # App entry point
-├── data/                            # Data layer
-├── ui/
-│   ├── components/                  # Reusable components
-│   ├── navigation/                  # Navigation setup
-│   ├── screens/                     # Screen implementations
-│   └── theme/                       # App theming
-```
-
 ## 🛠️ Tech Stack
 
-- **Language**: Kotlin
+- **Language**: Kotlin (2.0.21)
 - **UI**: Jetpack Compose (Material 3)
-- **Video**: Media3 (ExoPlayer, Transformer, Effect)
+- **Video**: Media3 (Transformer, Effect)
 - **Background**: WorkManager
 - **State**: ViewModel + DataStore
 
